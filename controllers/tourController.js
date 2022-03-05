@@ -1,5 +1,5 @@
 const multer = require('multer');
-const sharp = require('sharp');
+// const sharp = require('sharp');
 const Tour = require('./../models/tourModel');
 const catchAsync = require('./../utils/catchAsync');
 const factory = require('./handlerFactory');
@@ -20,39 +20,41 @@ const upload = multer({
   fileFilter: multerFilter
 });
 
-exports.uploadTourImages = upload.fields([   // its a middleware for upoloading tour images. upload.fields is for differnt fields and more images and upload.single is for single field and image. 
-  { name: 'imageCover', maxCount: 1 },       // in tourModel field name is imageCover
-  { name: 'images', maxCount: 3 }            // in tourModel field name is images
+exports.uploadTourImages = upload.fields([
+  // its a middleware for upoloading tour images. upload.fields is for differnt fields and more images and upload.single is for single field and image.
+  { name: 'imageCover', maxCount: 1 }, // in tourModel field name is imageCover
+  { name: 'images', maxCount: 3 } // in tourModel field name is images
 ]);
 
 // upload.single('image') req.file           // one field one image
 // upload.array('images', 5) req.files       // one field multiple image
 
-exports.resizeTourImages = catchAsync(async (req, res, next) => { // its a middleware for resizing tour images
-  if (!req.files.imageCover || !req.files.images) return next();  // console.log (req.files). if there is no image uploaded
+exports.resizeTourImages = catchAsync(async (req, res, next) => {
+  // its a middleware for resizing tour images
+  if (!req.files.imageCover || !req.files.images) return next(); // console.log (req.files). if there is no image uploaded
 
   // 1) Cover image
   req.body.imageCover = `tour-${req.params.id}-${Date.now()}-cover.jpeg`;
-  await sharp(req.files.imageCover[0].buffer)                     // imageCover is an array console.log (req.files)
-    .resize(2000, 1333)
-    .toFormat('jpeg')
-    .jpeg({ quality: 90 })
-    .toFile(`public/img/tours/${req.body.imageCover}`);
+  // await sharp(req.files.imageCover[0].buffer) // imageCover is an array console.log (req.files)
+  //   .resize(2000, 1333)
+  //   .toFormat('jpeg')
+  //   .jpeg({ quality: 90 })
+  //   .toFile(`public/img/tours/${req.body.imageCover}`);
 
   // 2) Images
-  req.body.images = [];                                         // images also an array in console.log (req.files)
+  req.body.images = []; // images also an array in console.log (req.files)
 
   await Promise.all(
     req.files.images.map(async (file, i) => {
       const filename = `tour-${req.params.id}-${Date.now()}-${i + 1}.jpeg`;
 
-      await sharp(file.buffer)
-        .resize(2000, 1333)
-        .toFormat('jpeg')
-        .jpeg({ quality: 90 })
-        .toFile(`public/img/tours/${filename}`);
+      // await sharp(file.buffer)
+      //   .resize(2000, 1333)
+      //   .toFormat('jpeg')
+      //   .jpeg({ quality: 90 })
+      //   .toFile(`public/img/tours/${filename}`);
 
-      req.body.images.push(filename);
+      // req.body.images.push(filename);
     })
   );
 
@@ -156,7 +158,7 @@ exports.getToursWithin = catchAsync(async (req, res, next) => {
   const { distance, latlng, unit } = req.params;
   const [lat, lng] = latlng.split(',');
 
-  const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1;  // for getting radius in mile we have to divide by 3963.2 and for killometer 6378.1 
+  const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1; // for getting radius in mile we have to divide by 3963.2 and for killometer 6378.1
 
   if (!lat || !lng) {
     next(

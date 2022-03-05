@@ -1,10 +1,10 @@
 const crypto = require('crypto');
-const { promisify } = require('util');           // 3rd party module for making a function asynchronous. after destructing it we are getting only promisify
-const jwt = require('jsonwebtoken');             // 3rd party module for authentication and authorization. It used the stateless approch means we do not need store any session on the server. Perfect for restfull api.
+const { promisify } = require('util');
+const jwt = require('jsonwebtoken');
 const User = require('./../models/userModel');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
-const Email = require('./../utils/email');  // Email is the class 
+const Email = require('./../utils/email');
 
 const signToken = id => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -12,16 +12,17 @@ const signToken = id => {
   });
 };
 
-const createSendToken = (user, statusCode, req, res) => {  // sening the status code
+const createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
-
-  res.cookie('jwt', token, {
+  const cookieOptions = {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
     ),
-    httpOnly: true,                                                      // for httpOnly we can not manipulate the cookie in any way 
-    secure: req.secure || req.headers['x-forwarded-proto'] === 'https'  // heroku specific for secure connection
-  });
+    httpOnly: true
+  };
+  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+
+  res.cookie('jwt', token, cookieOptions);
 
   // Remove password from output
   user.password = undefined;
@@ -43,11 +44,11 @@ exports.signup = catchAsync(async (req, res, next) => {
     passwordConfirm: req.body.passwordConfirm
   });
 
-  const url = `${req.protocol}://${req.get('host')}/me`;   // http://127.0.0.1:3000 we should not put this because this will only work in development not in production  .http (protocol) 127.0.0.1:3000 (host)
-  // console.log(url);
-  await new Email(newUser, url).sendWelcome();       // object of Email class who has two arguments (user, url) where user is newUser
+  const url = `${req.protocol}://${req.get('host')}/me`;
+  console.log(url);
+  await new Email(newUser, url).sendWelcome();
 
-  createSendToken(newUser, 201, req, res);
+  createSendToken(newUser, 201, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -65,7 +66,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   // 3) If everything ok, send token to client
-  createSendToken(user, 200, req, res);
+  createSendToken(user, 200, res);
 });
 
 exports.logout = (req, res) => {
@@ -76,14 +77,14 @@ exports.logout = (req, res) => {
   res.status(200).json({ status: 'success' });
 };
 
-exports.protect = catchAsync(async (req, res, next) => {  // protect is a middleware function created for cheacking the user is loggedin or not.
-  // 1) Getting token and check of it's existence
+exports.protect = catchAsync(async (req, res, next) => {
+  // 1) Getting token and check of it's there
   let token;
   if (
     req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')       // headers value should be Bearer string. with some characters.
+    req.headers.authorization.startsWith('Bearer')
   ) {
-    token = req.headers.authorization.split(' ')[1];      // getting the Bearer value only by removing Bearer word from the string which the token now.
+    token = req.headers.authorization.split(' ')[1];
   } else if (req.cookies.jwt) {
     token = req.cookies.jwt;
   }
@@ -95,8 +96,8 @@ exports.protect = catchAsync(async (req, res, next) => {  // protect is a middle
   }
 
   // 2) Verification token
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET); // promisify coming for util module and makes the function promise based.
-       //console.log (decoded)
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
   // 3) Check if user still exists
   const currentUser = await User.findById(decoded.id);
   if (!currentUser) {
@@ -109,7 +110,7 @@ exports.protect = catchAsync(async (req, res, next) => {  // protect is a middle
   }
 
   // 4) Check if user changed password after the token was issued
-  if (currentUser.changedPasswordAfter(decoded.iat)) {           // changedPasswordAfter instance method availble to every document and the method coming from userModel
+  if (currentUser.changedPasswordAfter(decoded.iat)) {
     return next(
       new AppError('User recently changed password! Please log in again.', 401)
     );
@@ -117,7 +118,7 @@ exports.protect = catchAsync(async (req, res, next) => {  // protect is a middle
 
   // GRANT ACCESS TO PROTECTED ROUTE
   req.user = currentUser;
-  res.locals.user = currentUser;                          // res.locals by this we can use this in our template
+  res.locals.user = currentUser;
   next();
 });
 
@@ -152,7 +153,7 @@ exports.isLoggedIn = async (req, res, next) => {
   next();
 };
 
-exports.restrictTo = (...roles) => {        //Authorize users.
+exports.restrictTo = (...roles) => {
   return (req, res, next) => {
     // roles ['admin', 'lead-guide']. role='user'
     if (!roles.includes(req.user.role)) {
@@ -165,7 +166,7 @@ exports.restrictTo = (...roles) => {        //Authorize users.
   };
 };
 
-exports.forgotPassword = catchAsync(async (req, res, next) => {  //when user forget password
+exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 1) Get user based on POSTed email
   const user = await User.findOne({ email: req.body.email });
   if (!user) {
@@ -181,7 +182,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {  //when user for
     const resetURL = `${req.protocol}://${req.get(
       'host'
     )}/api/v1/users/resetPassword/${resetToken}`;
-    await new Email(user, resetURL).sendPasswordReset();  // sendPasswordReset coming from email
+    await new Email(user, resetURL).sendPasswordReset();
 
     res.status(200).json({
       status: 'success',
@@ -203,7 +204,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   // 1) Get user based on the token
   const hashedToken = crypto
     .createHash('sha256')
-    .update(req.params.token)                    // param is the parameter (/resetPassword/:token or /:id)
+    .update(req.params.token)
     .digest('hex');
 
   const user = await User.findOne({
@@ -223,15 +224,15 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
   // 3) Update changedPasswordAt property for the user
   // 4) Log the user in, send JWT
-  createSendToken(user, 200, req, res);
+  createSendToken(user, 200, res);
 });
 
-exports.updatePassword = catchAsync(async (req, res, next) => {  //when user loggedin and want to change password
+exports.updatePassword = catchAsync(async (req, res, next) => {
   // 1) Get user from collection
   const user = await User.findById(req.user.id).select('+password');
 
   // 2) Check if POSTed current password is correct
-  if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {  // checking cuurent pass to saved pass. and correctPassword (availble in all document) coming from userModel who has candidatePassword and updatePassword 
+  if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
     return next(new AppError('Your current password is wrong.', 401));
   }
 
@@ -239,8 +240,8 @@ exports.updatePassword = catchAsync(async (req, res, next) => {  //when user log
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
   await user.save();
-  // User.findByIdAndUpdate will NOT work as intended!  because passwordConfirm validalor does not work for update. that validalor works only for save and create.
+  // User.findByIdAndUpdate will NOT work as intended!
 
   // 4) Log user in, send JWT
-  createSendToken(user, 200, req, res);
+  createSendToken(user, 200, res);
 });

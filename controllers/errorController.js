@@ -6,7 +6,7 @@ const handleCastErrorDB = err => {
 };
 
 const handleDuplicateFieldsDB = err => {
-  const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0]; // errmsg mongoDB property can be get from postman. match(/(["'])(\\?.)*?\1/) is a regular expression we will get an array
+  const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0]; 
 
   const message = `Duplicate field value: ${value}. Please use another value!`;
   return new AppError(message, 400);
@@ -25,7 +25,7 @@ const handleJWTError = () =>
 const handleJWTExpiredError = () =>
   new AppError('Your token has expired! Please log in again.', 401);
 
-const sendErrorDev = (err, req, res) => {  // in development we should get more error
+const sendErrorDev = (err, req, res) => {  
   // A) API
   if (req.originalUrl.startsWith('/api')) {
     return res.status(err.statusCode).json({
@@ -44,7 +44,7 @@ const sendErrorDev = (err, req, res) => {  // in development we should get more 
   });
 };
 
-const sendErrorProd = (err, req, res) => {  // in production we should get less error
+const sendErrorProd = (err, req, res) => {  
   // A) API
   if (req.originalUrl.startsWith('/api')) {
     // A) Operational, trusted error: send message to client
@@ -82,8 +82,8 @@ const sendErrorProd = (err, req, res) => {  // in production we should get less 
   });
 };
 
-module.exports = (err, req, res, next) => {   //handller for globalErrorHandller works with 4 argument starts with error
-  // console.log(err.stack);                  // stack the error where it happened
+module.exports = (err, req, res, next) => {   
+  // console.log(err.stack);                  
 
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
@@ -94,9 +94,9 @@ module.exports = (err, req, res, next) => {   //handller for globalErrorHandller
     let error = { ...err };
     error.message = err.message;
 
-    if (error.name === 'CastError') error = handleCastErrorDB(error); // castError means if the id is invalid
-    if (error.code === 11000) error = handleDuplicateFieldsDB(error); // if the name duplicate/copied 
-    if (error.name === 'ValidationError')                             // coming from mongoDB
+    if (error.name === 'CastError') error = handleCastErrorDB(error); 
+    if (error.code === 11000) error = handleDuplicateFieldsDB(error); 
+    if (error.name === 'ValidationError')                             
       error = handleValidationErrorDB(error);
     if (error.name === 'JsonWebTokenError') error = handleJWTError();
     if (error.name === 'TokenExpiredError') error = handleJWTExpiredError();

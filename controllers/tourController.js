@@ -21,21 +21,20 @@ const upload = multer({
 });
 
 exports.uploadTourImages = upload.fields([
-  // its a middleware for upoloading tour images. upload.fields is for differnt fields and more images and upload.single is for single field and image.
-  { name: 'imageCover', maxCount: 1 }, // in tourModel field name is imageCover
-  { name: 'images', maxCount: 3 } // in tourModel field name is images
+  
+  { name: 'imageCover', maxCount: 1 }, 
+  { name: 'images', maxCount: 3 } 
 ]);
 
-// upload.single('image') req.file           // one field one image
-// upload.array('images', 5) req.files       // one field multiple image
+
 
 exports.resizeTourImages = catchAsync(async (req, res, next) => {
   // its a middleware for resizing tour images
-  if (!req.files.imageCover || !req.files.images) return next(); // console.log (req.files). if there is no image uploaded
+  if (!req.files.imageCover || !req.files.images) return next(); 
 
   // 1) Cover image
   req.body.imageCover = `tour-${req.params.id}-${Date.now()}-cover.jpeg`;
-  // await sharp(req.files.imageCover[0].buffer) // imageCover is an array console.log (req.files)
+  // await sharp(req.files.imageCover[0].buffer) 
   //   .resize(2000, 1333)
   //   .toFormat('jpeg')
   //   .jpeg({ quality: 90 })
@@ -69,7 +68,7 @@ exports.aliasTopTours = (req, res, next) => {
 };
 
 exports.getAllTours = factory.getAll(Tour);
-exports.getTour = factory.getOne(Tour, { path: 'reviews' }); // path: 'reviews' means which fieled we want to papulate.
+exports.getTour = factory.getOne(Tour, { path: 'reviews' }); 
 exports.createTour = factory.createOne(Tour);
 exports.updateTour = factory.updateOne(Tour);
 exports.deleteTour = factory.deleteOne(Tour);
@@ -158,7 +157,7 @@ exports.getToursWithin = catchAsync(async (req, res, next) => {
   const { distance, latlng, unit } = req.params;
   const [lat, lng] = latlng.split(',');
 
-  const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1; // for getting radius in mile we have to divide by 3963.2 and for killometer 6378.1
+  const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1; 
 
   if (!lat || !lng) {
     next(
@@ -186,7 +185,7 @@ exports.getDistances = catchAsync(async (req, res, next) => {
   const { latlng, unit } = req.params;
   const [lat, lng] = latlng.split(',');
 
-  const multiplier = unit === 'mi' ? 0.000621371 : 0.001; // 1 meter = .00062 mile and 1 meter = .0001 kilometer. MongoDB gives values in meter so we r changing to mile
+  const multiplier = unit === 'mi' ? 0.000621371 : 0.001; 
 
   if (!lat || !lng) {
     next(

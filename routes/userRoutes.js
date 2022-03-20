@@ -11,7 +11,6 @@ router.get('/logout', authController.logout);
 router.post('/forgotPassword', authController.forgotPassword);
 router.patch('/resetPassword/:token', authController.resetPassword);
 
-// Protect all routes after this middleware beacuse middleware works in a squence like one after another. here , protect, updatePassword, getUser etc middleware
 router.use(authController.protect);
 
 router.patch('/updateMyPassword', authController.updatePassword);
@@ -24,7 +23,7 @@ router.patch(
 );
 router.delete('/deleteMe', userController.deleteMe);
 
-router.use(authController.restrictTo('admin')); // after this line every route is protected and also resticted to admin as well.
+router.use(authController.restrictTo('admin'));
 
 router
   .route('/')

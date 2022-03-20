@@ -2,7 +2,7 @@ const express = require('express');
 const reviewController = require('./../controllers/reviewController');
 const authController = require('./../controllers/authController');
 
-const router = express.Router({ mergeParams: true });// when we merging two routes. Here we are ma]erging tour and review route (/:tourId/reviews) 
+const router = express.Router({ mergeParams: true });
 
 router.use(authController.protect);
 
@@ -11,8 +11,7 @@ router
   .get(reviewController.getAllReviews)
   .post(
     authController.restrictTo('user'),
-    reviewController.setTourUserIds, // middleware in reviewController
-    reviewController.createReview
+    reviewController.setTourUserIds, 
   );
 
 router

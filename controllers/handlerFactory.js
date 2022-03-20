@@ -2,7 +2,7 @@ const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
 const APIFeatures = require('./../utils/apiFeatures');
 
-exports.deleteOne = Model =>                            // this funtion is for deleting all like tour, reviews or user. this works beacuse of the clouser. inner funtion get access to the outer function variable even after the outer funtion already returned
+exports.deleteOne = Model =>                            
   catchAsync(async (req, res, next) => {
     const doc = await Model.findByIdAndDelete(req.params.id);
 
@@ -47,7 +47,7 @@ exports.createOne = Model =>
     });
   });
 
-exports.getOne = (Model, popOptions) =>              // popOptions is for populate
+exports.getOne = (Model, popOptions) =>              
   catchAsync(async (req, res, next) => {
     let query = Model.findById(req.params.id);
     if (popOptions) query = query.populate(popOptions);
@@ -67,7 +67,7 @@ exports.getOne = (Model, popOptions) =>              // popOptions is for popula
 
 exports.getAll = Model =>
   catchAsync(async (req, res, next) => {
-    // To allow for nested GET reviews on tour (hack). get all the reviews for one tour. for reviews filter will work but tour, user it will not.
+    
     let filter = {};
     if (req.params.tourId) filter = { tour: req.params.tourId };
 
@@ -76,7 +76,7 @@ exports.getAll = Model =>
       .sort()
       .limitFields()
       .paginate();
-    // const doc = await features.query.explain(); // Here explain gives the deatils of the query in postman. how many docs searched how much time how many results etc. 
+    
     const doc = await features.query;
 
     // SEND RESPONSE

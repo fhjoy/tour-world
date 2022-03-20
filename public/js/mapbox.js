@@ -5,16 +5,15 @@ export const displayMap = locations => {
 
   var map = new mapboxgl.Map({
     container: 'map',
-    style: 'mapbox://styles/jonasschmedtmann/cjvi9q8jd04mi1cpgmg7ev3dy',
+    style: 'mapbox://styles/faisal/cjvi9q8jd04mi1cpgmg7ev3dy',
     scrollZoom: false
     // center: [-118.113491, 34.111745],
     // zoom: 10,
     // interactive: false
   });
 
-  const bounds = new mapboxgl.LngLatBounds();// like MongoDB in mapbox also longitute 1st and then latitute
-
-  locations.forEach(loc => {                 // for adding marker (pointer to location) to the map.
+  const bounds = new mapboxgl.LngLatBounds();
+  locations.forEach(loc => {
     // Create marker
     const el = document.createElement('div');
     el.className = 'marker';
@@ -27,7 +26,7 @@ export const displayMap = locations => {
       .setLngLat(loc.coordinates)
       .addTo(map);
 
-    // Add popup                            // name of the location where we are pointing the marker
+    // Add popup
     new mapboxgl.Popup({
       offset: 30
     })
@@ -39,7 +38,8 @@ export const displayMap = locations => {
     bounds.extend(loc.coordinates);
   });
 
-  map.fitBounds(bounds, {                   // adding some animations 
+  map.fitBounds(bounds, {
+    // adding some animations
     padding: {
       top: 200,
       bottom: 150,

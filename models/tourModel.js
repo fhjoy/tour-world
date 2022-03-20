@@ -36,7 +36,7 @@ const tourSchema = new mongoose.Schema(
       default: 4.5,
       min: [1, 'Rating must be above 1.0'],
       max: [5, 'Rating must be below 5.0'],
-      set: val => Math.round(val * 10) / 10 // 4.666666, 46.6666, 47, 4.7 // set means setter method it runs when a new value set to ratingsAverage
+      set: val => Math.round(val * 10) / 10
     },
     ratingsQuantity: {
       type: Number,
@@ -107,7 +107,7 @@ const tourSchema = new mongoose.Schema(
     guides: [
       {
         type: mongoose.Schema.ObjectId,
-        ref: 'User'                        // Parental refference. creating referrence to another model by that we are creating a relationship between to dataset
+        ref: 'User'
       }
     ]
   },
@@ -117,8 +117,7 @@ const tourSchema = new mongoose.Schema(
   }
 );
 
-// tourSchema.index({ price: 1 });   //single field index. indexing meaning we are sorting the result. "1" means asending and "-1" means desending order. in this way when we query for tours mongoDB has to look for less document because its in order.
-tourSchema.index({ price: 1, ratingsAverage: -1 });  // compound index(because we are indexing two fields). and we also do not index for all the fields because it uses resources. we use where user usually query.  
+tourSchema.index({ price: 1, ratingsAverage: -1 });
 tourSchema.index({ slug: 1 });
 tourSchema.index({ startLocation: '2dsphere' });
 
@@ -126,11 +125,11 @@ tourSchema.virtual('durationWeeks').get(function() {
   return this.duration / 7;
 });
 
-// Virtual populate                     means we will get the reviews in tour but will not saved in the database.
+// Virtual populate
 tourSchema.virtual('reviews', {
-  ref: 'Review',                  // referrence to reviewModel and get the data.
-  foreignField: 'tour',           // we are connecting two models tourModel and reviewModel. foreignField we will get the id in tour (reviewModel --> tour field )
-  localField: '_id'               // Here in tourModel we will get the id in "_id"
+  ref: 'Review',
+  foreignField: 'tour', // we are connecting two models tourModel and reviewModel. foreignField we will get the id in tour (reviewModel --> tour field )
+  localField: '_id'
 });
 
 // DOCUMENT MIDDLEWARE: runs before .save() and .create()
@@ -139,9 +138,9 @@ tourSchema.pre('save', function(next) {
   next();
 });
 
-// tourSchema.pre('save', async function(next) {                              // for embadding data modeling. it has some drowbacks like when a wants to change email, role etc
-//   const guidesPromises = this.guides.map(async id => await User.findById(id)); 
-//   this.guides = await Promise.all(guidesPromises);                        // receives an arrary with all the promises and returns an array 
+// tourSchema.pre('save', async function(next) {
+//   const guidesPromises = this.guides.map(async id => await User.findById(id));
+//   this.guides = await Promise.all(guidesPromises);
 //   next();
 // });
 
@@ -165,9 +164,9 @@ tourSchema.pre(/^find/, function(next) {
 });
 
 tourSchema.pre(/^find/, function(next) {
-  this.populate({                       //this pointing to the query. and populate creates a field called guide and filled with data based on "guides field in the model" but only in the query not in the database.
+  this.populate({
     path: 'guides',
-    select: '-__v -passwordChangedAt'   // removing __V and passwordChangedAt 
+    select: '-__v -passwordChangedAt'
   });
 
   next();

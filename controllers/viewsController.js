@@ -70,7 +70,7 @@ exports.getMyTours = catchAsync(async (req, res, next) => {
 });
 
 exports.updateUserData = catchAsync(async (req, res, next) => {
-  const updatedUser = await User.findByIdAndUpdate(             // by findByIdAndUpdate we do not update password beacuse here save middleware will work so we can not encrypt our password. for password we have differt api and differt form.
+  const updatedUser = await User.findByIdAndUpdate(
     req.user.id,
     {
       name: req.body.name,

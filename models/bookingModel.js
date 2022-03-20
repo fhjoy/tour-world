@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const bookingSchema = new mongoose.Schema({
-  tour: {                                  // this is called parent refecening here we are referrencing Tour 
+  tour: {                                  
     type: mongoose.Schema.ObjectId,
     ref: 'Tour',
     required: [true, 'Booking must belong to a Tour!']
